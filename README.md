@@ -18,7 +18,7 @@ El sistema se encuentra dividido en 4 etapas:
 - Etapa de salida.
 - Etapa de configuración.
 
-![Diagrama bloques](Diagramas\DiagramaBloques.png "Diagrama bloques")  
+![Diagrama bloques](Diagramas/DiagramaBloques.png "Diagrama bloques")  
 *Figura 1 – Diagrama por bloques*
 <!---The code is divided into three main files:
 
