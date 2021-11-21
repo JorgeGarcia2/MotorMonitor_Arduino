@@ -1,19 +1,27 @@
 #include <avr/pgmspace.h>
+#include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <HX711.h>
 #include <EEPROM.h>
 #include <SPI.h>
 #include <SD.h>
+#include <RTClib.h>
 
 #define SSpin 10      // Slave Select SD en pin 10
 #define hxData 7      // Data HX711 en pin 7
 #define hxClock 6     // Clock HX711 en pin 7 
 #define eeAddress 0   // Direccion de memoria EEPROM que guarda el factor de escala del HX711
-
+#define button 7
 
 LiquidCrystal_I2C lcdDisplay(0x27, 20, 4); // Instancia de la clase LiquidCrystal_I2C con direccion 0x27 para un display de 16 caracteres y 4 lineas
 HX711 loadCell; //Instancia de la clase HX711
+RTC_DS3231 rtc;
+DateTime now;
 
+bool buttonState=false;
+int ti;
+int tf;
+int timeDelta;
 
 String fileName; // Nombre del archivo de datos en la memoria SD
 bool sdReady = false; // Disponibilidad de gardar los datos en la memoria SD
@@ -22,35 +30,75 @@ uint16_t rpm; // Variable de las Revoluciones por minuto
 float force, torque, power; // Variables de Fuerza, torque y potencia
 uint16_t id_sample = 0; //Variable del numero de muestra
 
+
 // Funcion de configuracion previa
 void setup() {
   Serial.begin(9600); // Inicializa la comunicacion serie a 9600 baudios
   lcdDisplay.init(); // Inicializa el lcd
   lcdDisplay.backlight(); // Enciende la luz de fondo del display
   loadCell.begin(hxData, hxClock); // Inicializa el modulo HX711 con sus pines de datos y reloj
+  pinMode(7, INPUT);
+
+  // Comprobamos si tenemos el RTC conectado
+  if (!rtc.begin()) {
+    Serial.println("No hay un módulo RTC");
+  }
 
   // Muestra el mensaje "Bienvenido" en el LCD
   lcdDisplay.setCursor(3, 1);
   lcdDisplay.print(F("Bienvenido"));
   delay(1000);
 
-  setScale(); // Llama a la funcion setScale para que realize la configuracion de la celda de carga 
-  setSD(); // Llama a la funcion setSD para que realice la configuracion de la memoria SD
+  //setScale(); // Llama a la funcion setScale para que realize la configuracion de la celda de carga 
   
   // Muestra en el monitor serie un mensaje para ingresar el numero de revolucioones por minuto
-  Serial.println(F("\nIngrese las RPM: ")); 
+  Serial.println(F("Presiona el boton para iniciar la prueba")); 
 }
 
 // Funcion ciclica
 void loop() {
-  // Llama a la funcion getData()
-  getData(); 
-  delay(500); // Espera 500 ms
+  if(!digitalRead(button)){
+    buttonState=!buttonState;
+    now = rtc.now();
+    if (buttonState == true){
+        setSD(); // Llama a la funcion setSD para que realice la configuracion de la memoria SD
+        rpm = 0;
+        ti = now.unixtime();
+        Serial.println(F("\nPrueba iniciada"));
+        Serial.println(F("Presiona el boton para terminar la prueba")); 
+        Serial.println(F("\nIngrese las RPM: ")); 
+    }
+    else {
+
+        lcdDisplay.clear();
+        lcdDisplay.setCursor(7, 1);
+        lcdDisplay.print(F("Prueba"));
+        lcdDisplay.setCursor(5, 2);
+        lcdDisplay.print(F("Finalizada"));
+        tf = now.unixtime();
+        timeDelta = tf-ti;
+        Serial.println(F("\nPrueba finalizada")); 
+        Serial.print(F("\nTiempo cronometrado: ")); 
+        Serial.print(timeDelta);
+        Serial.println(F(" segundos"));
+        Serial.println(F("Presiona el boton para iniciar una nueva prueba")); 
+    }
+    delay(2000);
+  }
+
+  if (buttonState) {
+    // Llama a la funcion getData()
+    getData(); 
+    delay(500); // Espera 500 ms
+  }
 }
+
+  
 
 // Realiza la lectura y calculo de datos y envia a el LCD y al archivo de datos en caso de que este disponible.
 void getData(void) {
-  force = loadCell.get_units(5); // Guarda la lectura obtenida por la celda de carga
+  //force = loadCell.get_units(5); // Guarda la lectura obtenida por la celda de carga
+  force = 5;
   force = (force >= 0)? force : 0.0; // En caso de que la lectura de la celda de carga sea menor a 0, lo guardara como 0
   // En caso de que se envie un nuevo valor de las rpm por el monitor serie, se sustituira el valor, en caso contrario se mantendra
   rpm = (Serial.available() > 0)? Serial.parseInt(SKIP_ALL, '\n') : rpm; 
@@ -61,8 +109,7 @@ void getData(void) {
 }
 
 // Guarda los valores de id_sample, RPM, Fuera, Torque en N*m , Torque en lb*ft y Potencia en un archivo de datos en la memoria SD 
-void saveData()
-{
+void saveData() {
   
   File myFile = SD.open(fileName, FILE_WRITE); // Crea un objeto tipo file que apunta a un archivo en la memoria SD
   // Si se crea exitosamente el objeto escribira los datos separandolos por comas
@@ -89,7 +136,7 @@ void saveData()
 }
 
 // Imprime los valores de RPM, Fuera, Torque y Potencia en el LCD
-void printValues(){
+void printValues() {
   lcdDisplay.clear();
   lcdDisplay.setCursor(0,0);
   lcdDisplay.print(F("RPM: "));
@@ -208,8 +255,7 @@ void setSD(void) {
   }
 
   // Si sdReady tiene el estado de false, se mando un mensaje al monitor serie 
-  if (!sdReady)
-  {
+  if (!sdReady) {
     Serial.print(F("\nError SD. Archivo o memoria no disponible\n\n"));
   }
   delay(1000);
