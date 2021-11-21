@@ -11,7 +11,7 @@
 #define hxData 7      // Data HX711 en pin 7
 #define hxClock 6     // Clock HX711 en pin 7 
 #define eeAddress 0   // Direccion de memoria EEPROM que guarda el factor de escala del HX711
-#define button 7
+#define button 4
 
 LiquidCrystal_I2C lcdDisplay(0x27, 20, 4); // Instancia de la clase LiquidCrystal_I2C con direccion 0x27 para un display de 16 caracteres y 4 lineas
 HX711 loadCell; //Instancia de la clase HX711
@@ -49,7 +49,7 @@ void setup() {
   lcdDisplay.print(F("Bienvenido"));
   delay(1000);
 
-  //setScale(); // Llama a la funcion setScale para que realize la configuracion de la celda de carga 
+  setScale(); // Llama a la funcion setScale para que realize la configuracion de la celda de carga 
   
   // Muestra en el monitor serie un mensaje para ingresar el numero de revolucioones por minuto
   Serial.println(F("Presiona el boton para iniciar la prueba")); 
@@ -97,8 +97,7 @@ void loop() {
 
 // Realiza la lectura y calculo de datos y envia a el LCD y al archivo de datos en caso de que este disponible.
 void getData(void) {
-  //force = loadCell.get_units(5); // Guarda la lectura obtenida por la celda de carga
-  force = 5;
+  force = loadCell.get_units(5); // Guarda la lectura obtenida por la celda de carga
   force = (force >= 0)? force : 0.0; // En caso de que la lectura de la celda de carga sea menor a 0, lo guardara como 0
   // En caso de que se envie un nuevo valor de las rpm por el monitor serie, se sustituira el valor, en caso contrario se mantendra
   rpm = (Serial.available() > 0)? Serial.parseInt(SKIP_ALL, '\n') : rpm; 
