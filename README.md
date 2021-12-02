@@ -21,13 +21,13 @@ El sistema se encuentra dividido a su vez en 4 etapas:
 ![Diagrama bloques](Diagramas/DiagramaBloques.png "Diagrama bloques")  
 *Figura 1 – Diagrama por bloques*
 
-La etapa de estrada está conformada por la celda de carga, el módulo amplificador HX711, el modulo RTC y un botón. 
+La etapa de estrada está conformada por la celda de carga en conjunto con el módulo amplificador HX711 y el modulo RTC. 
 La celda de carga es una estructura diseñada para soportar cargas de compresión, en cuyo interior se encuentran varios sensores de deformación llamados Galgas extensiométricas. Estos sensores cambian el valor de su resistencia en función de su deformación, en este caso causada por una fuerza de compresión. Al aplicarle un voltaje de entrada genera un voltaje de salida proporcional a la fuerza aplicada, sin embargo, estos incrementos son en orden de milivolts, por lo que es necesario usar un amplificador de voltaje HX711 el cual convierte la entrada analogica en digital y lo envía por medio de un bus serie al subsistema de control.
-El Reloj de Tiempo Real (RTC), el cual se utiliza para obtener 
+El modulo de Reloj de Tiempo Real (RTC) proporciona, de una manera fiable, la fecha y hora actual gracias a la bateria que le permite mantener su conteo. En esté caso se ocupó para obtener de una manera mas precisa la hora de inicio y fin de las pruebas.
 
 La etapa de salida consta de tres módulos. Un adaptador MicroSD para el almacenamiento de los datos, un módulo interfaz de conversión I2C a LCD y un módulo display LCD de 20 caracteres por 4 líneas para desplegar los valores de los datos en tiempo real. En el caso del módulo MicroSD se comunica con el Arduino por medio del bus SPI. Por otra parte el módulo LCD está conectado directamente a la interfaz de conversión que a su vez se comunica con el Arduino por medio del bus I2C.
 
-En la etapa de Configuración es necesario comunicar al Arduino con un monitor Serie en una computadora, el cual se conecta a través del cable USB. Para fines prácticos, se puede ocupar el monitor serie integrado en el IDE de Arduino. Por medio de este monitor se interactúa con el usuario para llevar a cabo la calibración de la celda de carga o para ajustar el valor de las RPM.
+En la etapa de Configuración es necesario comunicar al Arduino con un monitor Serie en una computadora, el cual se conecta a través del cable USB. Para fines prácticos, se puede ocupar el monitor serie integrado en el IDE de Arduino. Por medio de este monitor se interactúa con el usuario para llevar a cabo la calibración de la celda de carga o para ajustar el valor de las RPM y el peso del combustible al inicio y termino de la prueba.
 
 Para el caso de la Etapa de Control se cuenta con una tarjeta Arduino UNO, la cual realiza la calibración de la celda de carga y periódicamente lleva a cabo lecturas de la celda de carga, calcula variables de interés, las envía al módulo MicroSD para su almacenamiento y las muestra en un display LCD.
 

@@ -68,7 +68,7 @@ void setup() {
   // Se solicita las rpm por el monitor serie
   Serial.print(F("\n<< Ingresa las RPM: ")); 
   getRPM();
-  Serial.print(F("<< Ingresa la masa del combustible: "));
+  Serial.print(F("<< Ingresa la masa del combustible(g): "));
   getfuel(&fuelMassI); 
   // Muestra en el monitor serie un mensaje para ingresar el numero de revolucioones por minuto
   Serial.print(F(">> Ingresa cualquier tecla para iniciar la prueba"));
